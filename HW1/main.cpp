@@ -4,26 +4,43 @@
 //
 //  Created by Xiaoning Wang on 9/4/17.
 //  Copyright © 2017 Cher Wang. All rights reserved.
-//  References used: https://stackoverflow.com/questions/572962/reading-a-matrix-txt-file-and-storing-as-an-array
+//
 //
 
 #include <iostream>
+#include <fstream>
 #include "nr3.h"
 #include "ludcmp.h"
 #include "svd.h"
+#include "gaussj.h"
 
 int main(int argc, const char * argv[]) {
+    MatDoub test;
+    MatDoub A;
+    VecDoub x;
+    VecDoub b;
+    VecDoub c;
+    VecDoub x1;
+    VecDoub x2;
+    VecDoub r1;
+    VecDoub r2;
+    VecDoub x_numerical;
+    VecDoub r_numerical;
+    VecDoub error_numerical;
+    ifstream in;
+    
+    
     //Homework 1 Question 1
     // Initialize vectors and matrix A
     Doub a[2]={0.1869169, 0.2155734};
-    VecDoub b = VecDoub(2,a);
+    b = VecDoub(2,a);
     Doub a1[2]={1.0,-1.0};
-    VecDoub x = VecDoub(2,a1);
+    x = VecDoub(2,a1);
     Doub a2[2]={0.9999999,-1.0000001};
-    VecDoub x1 = VecDoub(2,a2);
+    x1 = VecDoub(2,a2);
     Doub a3[2]={0.4073666,-0.1945277};
-    VecDoub x2 = VecDoub(2,a3);
-    MatDoub A(2,2);
+    x2 = VecDoub(2,a3);
+    A =MatDoub(2,2);
     A[0][0]=0.7073725;
     A[0][1]=0.5204556;
     A[1][0]=0.8158208;
@@ -31,8 +48,8 @@ int main(int argc, const char * argv[]) {
     
     //a)Compute residuals
     //Set up 2 vectors to contain residual vectors
-    VecDoub r1 = VecDoub(2);
-    VecDoub r2 = VecDoub(2);
+    r1 = VecDoub(2);
+    r2 = VecDoub(2);
     
     //Do matrix multiplication and vector subtraction
     for (int i = 0; i<A.nrows(); i++){
@@ -63,17 +80,17 @@ int main(int argc, const char * argv[]) {
     //Use NR routine of LU decomposition to construct a LUdcmp struct, and then use its method solve to solve for the given vector b.
     std::cout<<std::endl<<"1. b)"<<std::endl;
     LUdcmp LUA = LUdcmp(A);
-    VecDoub x_numerical(2);
+    x_numerical = VecDoub(2);
     LUA.solve(b, x_numerical);
     
     std::cout<<"x_numerical using LU decomposition routine is ("<<x_numerical[0]<<", "<<x_numerical[1]<<"). "<<std::endl;
-    VecDoub error_numerical  = VecDoub(2);
+    error_numerical  = VecDoub(2);
     for (int i = 0; i<error_numerical.size(); i++){
         error_numerical[i]=x_numerical[i]-x[i];
     }
     std::cout<<"x_numerical error using LU decomposition routine is ("<<error_numerical[0]<<", "<<error_numerical[1]<<"). "<<std::endl;
     
-    VecDoub r_numerical = VecDoub(2);
+    r_numerical = VecDoub(2);
     for (int i = 0; i<A.nrows(); i++){
         for (int j = 0; j<A.ncols(); j++){
             r_numerical[i]+=A[i][j]*x_numerical[j];
@@ -93,10 +110,35 @@ int main(int argc, const char * argv[]) {
     std::cout<<"The condition number of A is "<<1./condA_inv<<std::endl;
     std::cout<<"It's reciprocal is "<<condA_inv<<std::endl;
     
-    //2.
-    //Firstly load files into matrix vector
-    //Reference https://stackoverflow.com/questions/572962/reading-a-matrix-txt-file-and-storing-as-an-array
-    //compute matrix inverse
+    //2. Firstly load the matrix and vectors
+    /*in("A.txt");
+    MatDoub A2 = MatDoub(1600,1600);
+    for (int i = 0; i < 1600; i++) {
+        for (int j = 0; j < 1600; j++) {
+            in >> A2[i][j];
+        }
+    }
+    in.close();*/
+    
+    b = VecDoub(5);
+    ifstream in2("b.txt");
+    if (!in2){std::cout<<"error"<<std::endl;}
+    for (int i = 0; i < 5; i++){
+        in2 >> b[i];
+    }
+    in2.close();
+    std::cout<<b[0]<<std::endl;
+    
+    /*c = VecDoub(1600);
+    ifstream in3("c.txt");
+    for (int i = 0; i < 1600; i++){
+        in3 >> c[i];
+    }
+    
+    test = A2;
+    std::cout<<test[0][0]<<std::endl;
+    gaussj(test);
+    std::cout<<test[0][0]<<std::endl;*/
     
     return 0;
 }
