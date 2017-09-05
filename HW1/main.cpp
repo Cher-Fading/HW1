@@ -9,6 +9,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <string>
 #include "nr3.h"
 #include "ludcmp.h"
 #include "svd.h"
@@ -27,7 +28,6 @@ int main(int argc, const char * argv[]) {
     VecDoub x_numerical;
     VecDoub r_numerical;
     VecDoub error_numerical;
-    ifstream in;
     
     
     //Homework 1 Question 1
@@ -111,35 +111,110 @@ int main(int argc, const char * argv[]) {
     std::cout<<"It's reciprocal is "<<condA_inv<<std::endl;
     
     //2. Firstly load the matrix and vectors
-    /*in("A.txt");
-    MatDoub A2 = MatDoub(1600,1600);
-    for (int i = 0; i < 1600; i++) {
-        for (int j = 0; j < 1600; j++) {
-            in >> A2[i][j];
+    //To avoid memory leak, declare all variables for question 2 as new variables, to distinguish, add "_2" at the end of variable name.
+    
+    ifstream in;
+    ifstream in2;
+    ifstream in3;
+    MatDoub A_2;
+    VecDoub b_2;
+    VecDoub c_2;
+    VecDoub x_2;
+    VecDoub x_2LU;
+    VecDoub x_2imp;
+    VecDoub r_2imp;
+    Doub sr_2;
+    Doub sr_2LU;
+    Doub sr_2imp;
+    
+    A_2 = MatDoub(1600,1600);
+    in.open("/Users/cherwang/Google Drive/2017 Fall/PHYS 4480/HW1/HW1/A.txt");
+    if (!in){
+        std::cout<<"error in opening A.txt"<<std::endl;
+    }
+    else{
+        for (int i = 0; i < 1600; i++) {
+            for (int j = 0; j < 1600; j++) {
+                in >> A_2[i][j];
+            }
         }
     }
-    in.close();*/
+    in.close();
     
-    b = VecDoub(5);
-    ifstream in2("b.txt");
-    if (!in2){std::cout<<"error"<<std::endl;}
-    for (int i = 0; i < 5; i++){
-        in2 >> b[i];
+    b_2 = VecDoub(1600);
+    in2.open("/Users/cherwang/Google Drive/2017 Fall/PHYS 4480/HW1/HW1/b.txt");
+    if (!in2){
+        std::cout<<"error in opening b.txt"<<std::endl;
+    }
+    else{
+        for (int i = 0; i < 1600; i++){
+            in2 >> b_2[i];
+        }
     }
     in2.close();
-    std::cout<<b[0]<<std::endl;
     
-    /*c = VecDoub(1600);
-    ifstream in3("c.txt");
-    for (int i = 0; i < 1600; i++){
-        in3 >> c[i];
+    c = VecDoub(1600);
+    in3.open("/Users/cherwang/Google Drive/2017 Fall/PHYS 4480/HW1/HW1/c.txt");
+    if (!in3){
+        std::cout<<"error in opening c.txt"<<std::endl;
+    }
+    else{
+        for (int i = 0; i < 1600; i++){
+            in3 >> c[i];
+        }
     }
     
-    test = A2;
-    std::cout<<test[0][0]<<std::endl;
+    //a) Make a copy of loaded matrix A_2, and multiply it by b to get x
+    std::cout<<std::endl<<"2. a)"<<std::endl;
+    test = A_2;
     gaussj(test);
-    std::cout<<test[0][0]<<std::endl;*/
+    x_2 = VecDoub(1600);
+    sr_2 = 0;
+    for (int i = 0; i < test.nrows(); i++){
+        for (int j = 0; j < test.ncols(); j++){
+            x_2[i]+=test[i][j]*b_2[j];
+        }
+        sr_2 += abs(x_2[i]-c[i]);
+    }
+    std::cout<< "The measure of error using matrix inverse is "<< sr_2 << std::endl;
     
+    //b) Use LU decomposition to compute a solution and measure its error
+    std::cout<<std::endl<<"2. b)"<<std::endl;
+    LUdcmp LUA_2 = LUdcmp(A_2);
+    x_2LU = VecDoub(1600);
+    sr_2LU = 0;
+    LUA_2.solve(b_2, x_2LU);
+    for (int i = 0; i < x_2LU.size(); i++){
+        sr_2LU += abs(x_2LU[i]-c[i]);
+    }
+    std::cout<< "The measure of error using LU decomposition is "<< sr_2LU << std::endl;
+    
+    //c) Use interactive improvement routine from NR codes and report on residual
+    //Use a separate variable to store improved solution
+    x_2imp = x_2LU;
+    LUA_2.mprove(b_2, x_2imp);
+    
+    //initialize r_2imp
+    r_2imp = VecDoub(16);
+    sr_2imp = 0;
+    std::cout<<"The residual of using improved LU decomposition is (";
+    for (int i = 0; i < A_2.nrows(); i++){
+        for (int j = 0; j < A_2.ncols(); j++){
+            r_2imp[i]+=A_2[i][j]*x_2imp[j];
+        }
+        r_2imp[i] = b_2[i]-r_2imp[i];
+        std::cout<<r_2imp[i];
+        if ( i != A_2.nrows()-1) {
+            std::cout<<", ";
+        }
+        sr_2imp += abs(x_2imp[i]-c[i]);
+    }
+    std::cout<<")."<<std::endl;
+    std::cout<<"The measure of error using improved LU decomposition is "<< sr_2imp <<std::endl;
+    
+    SVD SVD_2 = SVD(A_2);
+    Doub condA_2_inv = SVD_2.inv_condition();
+    std::cout<<"The condition number of matrix A is" << 1./condA_2_inv<<std::endl;
     return 0;
 }
 
