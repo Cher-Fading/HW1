@@ -214,7 +214,7 @@ int main(int argc, const char * argv[]) {
     
     SVD SVD_2 = SVD(A_2);
     Doub condA_2_inv = SVD_2.inv_condition();
-    std::cout<<"The condition number of matrix A is" << 1./condA_2_inv<<std::endl;
+    std::cout<<"The condition number of matrix A is " << 1./condA_2_inv<<std::endl;
     return 0;
 }
 
